@@ -16,4 +16,10 @@
     <!--Main Screen-->
     <string name="empty_list_layouts">You don\'t have layouts yet</string>
     <string name="menu_action_search">Search</string>
+    <string name="snackbar_permission_request_denied_action">Settings</string>
+
+    <!--Permissions requested-->
+    <string name="permission_read_storage_needed">The permission to read storage is needed to show the current layouts installed</string>
+    <string name="permission_read_storage_denied">You can grant the permission in the app settings</string>
+
 </resources>
