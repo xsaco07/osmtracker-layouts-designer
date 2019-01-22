@@ -15,4 +15,5 @@
 
     <!--Main Screen-->
     <string name="empty_list_layouts">You don\'t have layouts yet</string>
+    <string name="menu_action_search">Search</string>
 </resources>
