@@ -1,5 +1,7 @@
 package net.osmtracker.layoutsdesigner.activity;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,19 +10,21 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.AppCompatSpinner;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,10 +62,10 @@ public class MainActivity extends AppCompatActivity
 
         fab = (FloatingActionButton) findViewById(R.id.fab_create_new_layout);
         fab.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("ServiceCast")
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void onClick(View view){
+                showPopup();
             }
         });
 
@@ -127,6 +131,79 @@ public class MainActivity extends AppCompatActivity
             //the permission is already granted
             refreshActivity();
         }
+    }
+
+    public void showPopup(){
+
+        LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupLayout = inflater.inflate(R.layout.preparation_popup, null);
+
+        setSpinners(popupLayout);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        builder.setTitle(R.string.preparing_pop_up_title)
+                .setView(popupLayout)
+                .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        //TODO: OPEN EDITOR
+                        Log.i("#", "TODO: OPEN EDITOR");
+                    }
+                })
+                .setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                })
+                .setCancelable(true)
+                .create().show();
+    }
+
+    public void setSpinners(View v){
+
+        AppCompatSpinner columnsSpinner = (AppCompatSpinner) v.findViewById(R.id.spinner_columns);
+        final String[] columnsCounter = {"1","2","3"};
+
+        ArrayAdapter adapterColumns = new ArrayAdapter<>(this,
+                R.layout.spinner_item, columnsCounter);
+        adapterColumns.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        columnsSpinner.setAdapter(adapterColumns);
+
+        columnsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String numberColumns = columnsCounter[i];
+                Log.i("#", "Selección columnas: "+ numberColumns);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+
+
+        AppCompatSpinner rowsSpinner = (AppCompatSpinner) v.findViewById(R.id.spinner_rows);
+        final String[] rowsCounter = {"1","2","3","4"};
+        ArrayAdapter adapterRows = new ArrayAdapter<>(this,
+                R.layout.spinner_item, rowsCounter);
+        adapterRows.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        rowsSpinner.setAdapter(adapterRows);
+
+        rowsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String numberRows = rowsCounter[i];
+                Log.i("#", "Selección filas: "+ numberRows);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
     @Override
@@ -235,6 +312,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_btn_action_home) {
             // Handle the camera action
         } else if (id == R.id.nav_btn_action_editor) {
+            showPopup();
 
         } else if (id == R.id.nav_btn_action_settings) {
 

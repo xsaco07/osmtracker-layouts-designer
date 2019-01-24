@@ -11,4 +11,5 @@
     <color name="textColor">#fff</color>
     <color name="colorNavHeaderEnd">#287c00</color>
     <color name="colorNavHeaderStart">#91de58</color>
+    <color name="colorHintText">#c6999999</color>
 </resources>

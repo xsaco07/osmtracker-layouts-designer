@@ -16,7 +16,18 @@
     <!--Main Screen-->
     <string name="empty_list_layouts">You don\'t have layouts yet</string>
     <string name="menu_action_search">Search</string>
+
+    <!-- Preparation popup-->
+    <string name="preparing_pop_up_title">Preparing layout</string>
+    <string name="default_buttons_text">Default buttons (optional)</string>
+    <string name="default_button_camera">Camera</string>
+    <string name="default_button_voice">Voice record</string>
+    <string name="default_button_text_note">Text note</string>
     <string name="snackbar_permission_request_denied_action">Settings</string>
+    <string name="columns">Columns</string>
+    <string name="rows">Rows</string>
+    <string name="hint_layout_name">Name</string>
+    <string name="layout_name_text">Layout name</string>
 
     <!--Permissions requested-->
     <string name="permission_request_dialog_tittle">Permission Required</string>
@@ -25,5 +36,4 @@
     <string name="permission_read_storage_needed">The permission to read storage is needed to show the current layouts installed</string>
     <string name="permission_read_storage_denied">You cannot see the layouts installed in your phone</string>
     <string name="permission_grant_settings">You can grant this permission from app settings</string>
-
 </resources>
