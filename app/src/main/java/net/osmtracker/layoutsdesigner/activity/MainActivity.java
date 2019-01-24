@@ -1,46 +1,62 @@
 package net.osmtracker.layoutsdesigner.activity;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import net.osmtracker.layoutsdesigner.OsmtrackerLayoutsDesigner;
 import net.osmtracker.layoutsdesigner.R;
+import net.osmtracker.layoutsdesigner.utils.CheckPermissions;
 import net.osmtracker.layoutsdesigner.utils.CustomAdapterListMain;
+import net.osmtracker.layoutsdesigner.utils.CustomLayoutsUtils;
 import net.osmtracker.layoutsdesigner.utils.ItemListMain;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private ListView listLayoutContainer;
     private ArrayList<ItemListMain> itemsMainArray;
-
-    //This lists are only for test
-    private String[] names = new String[]{"Item 1", "Item 2", "Item 3"};
-    private String[] descriptions = new String[]{"Description 1", "Description 2", "Description 3"};
+    private FloatingActionButton fab;
+    private String contextTAG = OsmtrackerLayoutsDesigner.Preferences.TAG + ".MainActivity";
+    private String storageDir;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setUpElemets();
+    }
+
+    //This mehtod is used to initialize the first elements in the screen
+    private void setUpElemets(){
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_create_new_layout);
+        fab = (FloatingActionButton) findViewById(R.id.fab_create_new_layout);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -57,28 +73,124 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        storageDir = File.separator + OsmtrackerLayoutsDesigner.Preferences.VAL_STORAGE_DIR;
+    }
 
-        listLayoutContainer = (ListView) findViewById(R.id.list_layouts);
-        itemsMainArray = new ArrayList<ItemListMain>();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //verify if the permission to READ storage are granted
+        if(CheckPermissions.isPermissionDenied(MainActivity.this, OsmtrackerLayoutsDesigner.Preferences.READ_STORAGE_PERMISSION)){
 
-        //TODO: changes this for the populate of the existing layouts
-        for(int i = 0; i < names.length; i++){
-            itemsMainArray.add(new ItemListMain(names[i], descriptions[i]));
+            Log.i(contextTAG, "Permission to read storage denied");
+
+            //if the permission was denied by the user we push a dialog with a explanation message
+            if(CheckPermissions.needsToExplainToUser(MainActivity.this, OsmtrackerLayoutsDesigner.Preferences.READ_STORAGE_PERMISSION)){
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage(getResources().getString(R.string.permission_read_storage_needed))
+                        .setTitle(getResources().getString(R.string.permission_request_dialog_tittle));
+
+                builder.setPositiveButton(getResources().getString(R.string.dialog_accept), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Log.i(contextTAG, "User accept the message");
+                        CheckPermissions.makePermissionRequest(MainActivity.this, OsmtrackerLayoutsDesigner.Preferences.READ_STORAGE_PERMISSION,
+                                OsmtrackerLayoutsDesigner.Preferences.READ_STORAGE_PERMISSION_REQUEST_CODE);
+                    }
+                }).setNegativeButton(getResources().getString(R.string.dialog_cancel), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Log.i(contextTAG, "User declined to accept the permission");
+                        Snackbar snackbar = Snackbar.make(fab, getResources().getString(R.string.permission_grant_settings), Snackbar.LENGTH_LONG)
+                                .setAction(getResources().getString(R.string.snackbar_permission_request_denied_action), new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        Log.i("Intent", "Opening the app settings to grant the permission of read storage");
+                                        startActivity(new Intent(Settings.ACTION_APPLICATION_SETTINGS));
+                                    }
+                                });
+                        snackbar.show();
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+            else{
+                //We don't need to explain
+                CheckPermissions.makePermissionRequest(MainActivity.this, OsmtrackerLayoutsDesigner.Preferences.READ_STORAGE_PERMISSION,
+                        OsmtrackerLayoutsDesigner.Preferences.READ_STORAGE_PERMISSION_REQUEST_CODE);
+            }
         }
+        else{
+            //the permission is already granted
+            refreshActivity();
+        }
+    }
 
-        //when the layouts are populated then inflate the list with the elements in the array
-        if(itemsMainArray.size() > 0){
-            TextView emptyTextView = (TextView) findViewById(R.id.empty_list);
-            emptyTextView.setVisibility(View.INVISIBLE);
-            CustomAdapterListMain adapterListMain = new CustomAdapterListMain(this, itemsMainArray);
-            listLayoutContainer.setAdapter(adapterListMain);
-            listLayoutContainer.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case OsmtrackerLayoutsDesigner.Preferences.READ_STORAGE_PERMISSION_REQUEST_CODE: {
+                if (grantResults.length == 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Log.i(contextTAG, "The permission to read was denied by the user");
+                    Snackbar.make(fab, getResources().getString(R.string.permission_read_storage_denied), Snackbar.LENGTH_LONG).show();
+                }
+                else{
+                    Log.i(contextTAG, "The permission to read was granted");
+                    refreshActivity();
+                }
+            }
+        }
+    }
+
+    //Use this method to refresh the MainActivity when a new layouts is created or downloaded from the OSMTracker App
+    private void refreshActivity(){
+        Toast.makeText(getApplicationContext(), "Preparing the layouts", Toast.LENGTH_SHORT).show();
+        ListView listLayoutContainer = (ListView) findViewById(R.id.list_layouts);
+        listLayouts(listLayoutContainer);
+    }
+
+    //This method search the layouts downloaded in the /osmtracker/layouts/ directory and show their as a list in the main screen
+    private void listLayouts(ListView container){
+        //we need to search the layouts in the path /osmtracker/layouts/
+        File layoutsDir = new File(Environment.getExternalStorageDirectory(),
+                storageDir + File.separator + OsmtrackerLayoutsDesigner.Preferences.LAYOUTS_SUBDIR + File.separator);
+
+        //verify if we can access to this path
+        if(layoutsDir.exists() && layoutsDir.canRead()){
+            //enlist all the xml files in this directory
+            String[] layoutFiles = layoutsDir.list(new FilenameFilter() {
                 @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    //TODO: replace with the functionality to show the info of the layout pressed
-                    Toast.makeText(MainActivity.this, "You press the item: " + itemsMainArray.get(i).getLayoutCreatedName(), Toast.LENGTH_SHORT).show();
+                public boolean accept(File dir, String fileName) {
+                    return fileName.endsWith(OsmtrackerLayoutsDesigner.Preferences.LAYOUT_FILE_EXTENSION);
                 }
             });
+
+            //fill the array with the layouts founded
+            itemsMainArray = new ArrayList<ItemListMain>();
+            for(String fileName :  layoutFiles){
+                itemsMainArray.add(new ItemListMain(CustomLayoutsUtils.convertFileName(fileName), ""));
+            }
+            //verify if there are some layouts in the list to hide the message of "you don't have layouts yet"
+            if(itemsMainArray.size() > 0){
+                TextView emptyMessage = (TextView) findViewById(R.id.empty_list);
+                emptyMessage.setVisibility(View.INVISIBLE);
+                CustomAdapterListMain adapterListMain = new CustomAdapterListMain(MainActivity.this, itemsMainArray);
+                container.setAdapter(adapterListMain);
+                container.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        Toast.makeText(MainActivity.this, "You press " + itemsMainArray.get(i).getLayoutCreatedName(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+            else{
+                TextView emptyMessage = (TextView) findViewById(R.id.empty_list);
+                emptyMessage.setVisibility(View.VISIBLE);
+            }
         }
     }
 
