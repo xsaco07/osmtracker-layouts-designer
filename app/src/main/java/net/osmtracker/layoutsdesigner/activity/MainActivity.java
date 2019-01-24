@@ -1,9 +1,11 @@
 package net.osmtracker.layoutsdesigner.activity;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -105,8 +107,10 @@ public class MainActivity extends AppCompatActivity
                                     @Override
                                     public void onClick(View view) {
                                         Log.i("Intent", "Opening the app settings to grant the permission of read storage");
+                                        startActivity(new Intent(Settings.ACTION_APPLICATION_SETTINGS));
                                     }
                                 });
+                        snackbar.show();
                     }
                 });
 
