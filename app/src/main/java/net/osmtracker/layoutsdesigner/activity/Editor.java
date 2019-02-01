@@ -1,17 +1,24 @@
 package net.osmtracker.layoutsdesigner.activity;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.IntentService;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +43,16 @@ public class Editor extends AppCompatActivity {
     private String layoutName;
     private Button btnCancel;
     private Button btnAccept;
+
+    // Code returned by the startActivityForResult() to the onActionResult() method
+    // Indicates that the user choose correctly to select an image from the gallery
+    private int SELECT_IMAGE = 10;
+
+    private String IMAGE_PATH;
+    private TextView sample_url;
+    private ImageButton image_button;
+
+    private View current_new_button_popup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +99,8 @@ public class Editor extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     //TODO: MAKES THE FUNCTIONALITY TO OPEN THE POP UP AND SET NAME AND ICON TO THE ITEM
-                    Toast.makeText(getApplicationContext(), "You press " + position, Toast.LENGTH_SHORT).show();
+                    showPopUp();
+                    //Toast.makeText(getApplicationContext(), "You press " + position, Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -138,4 +156,78 @@ public class Editor extends AppCompatActivity {
         onBackPressed();
         return true;
     }
+
+    private void showPopUp(){
+        LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+        current_new_button_popup = inflater.inflate(R.layout.new_button_popup, null);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        builder.setTitle(R.string.new_button_pop_up_title)
+                .setView(current_new_button_popup)
+                .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        //
+
+                    }
+                })
+                .setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                })
+                .setCancelable(true)
+                .create().show();
+    }
+
+    // This method throws the intent to open the gallery so the user can choose an icon for the new button in the layout
+    // Is called when the user presses the Icon in the pop up
+    public void selectImage(View view){
+
+        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        startActivityForResult(intent, SELECT_IMAGE); // Start the activity waiting for a code as a response (SELECT_IMAGE)
+    }
+
+    // This method is called when the intent to open the gallery is finished or closed
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+
+        if (requestCode == SELECT_IMAGE){ // This is to indentIfy who returned the original requestCode
+            if (resultCode == Activity.RESULT_OK) { // If no error happened in the process
+                if(current_new_button_popup != null) showPathAndIcon(data.getData());
+            }
+        }
+    }
+
+    // This method writes the image path on the pop up window and shows the icon selected by the user
+    private void showPathAndIcon(Uri selectedImage){
+
+        sample_url = (TextView)current_new_button_popup.findViewById(R.id.url_text_view);
+        image_button = (ImageButton)current_new_button_popup.findViewById(R.id.imageButton);
+
+        if (selectedImage != null && selectedImage.getPath() != null){
+
+            IMAGE_PATH = getPath(selectedImage);
+            sample_url.setText(IMAGE_PATH);
+            Log.e("Path", IMAGE_PATH);
+        }
+
+        // Set the correct properties so the image is shown in the right way
+        image_button.setMaxWidth(100);
+        image_button.setMaxHeight(100);
+        image_button.setPadding(9,9,9,9);
+        image_button.setImageURI(selectedImage);
+    }
+
+    // This method returns the path of an Uri object as a string
+    private String getPath(Uri uri) {
+        String[] projection = { android.provider.MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
+
 }

@@ -41,4 +41,11 @@
 
     <!--Editor Screen-->
     <string name="empty_layout_name">New Layout {0}</string>
+
+    <!--New button Pop Up-->
+    <string name="new_button_pop_up_title">New Button</string>
+    <string name="icon">Choose icon:</string>
+    <string name="button_name">Name</string>
+    <string name="url_text">Image URL</string>
+
 </resources>
