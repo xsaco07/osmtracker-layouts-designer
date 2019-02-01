@@ -48,4 +48,13 @@
     <string name="button_name">Name</string>
     <string name="url_text">Image URL</string>
 
+    <!--About activity-->
+    <string name="version">V0.1</string>
+    <string name="more_information">For more information, issues or contributions please visit the main project page:</string>
+    <string name="lab_mention">Developed and maintained by Laboratorio Experimental - TEC Alajuela.</string>
+    <string name="lab_github_address">https://github.com/labexp</string>
+    <string name="github_address">https://github.com/labexp/osmtracker-layouts-designer</string>
+    <string name="about_activity_label">About</string>
+    <string name="title_activity_about2">AboutActivity2</string>
+
 </resources>
