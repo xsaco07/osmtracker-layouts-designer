@@ -98,7 +98,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
     <CheckBox
-        android:id="@+id/text_note"
+        android:id="@+id/cbx_text_note"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -109,13 +109,13 @@
         android:buttonTint="@color/colorAccent"
         android:text="@string/default_button_text_note"
         android:textColor="@color/textColor"
-        app:layout_constraintBottom_toBottomOf="@+id/voice_record"
+        app:layout_constraintBottom_toBottomOf="@+id/cbx_voice_record"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/voice_record"
-        app:layout_constraintTop_toTopOf="@+id/voice_record" />
+        app:layout_constraintStart_toEndOf="@+id/cbx_voice_record"
+        app:layout_constraintTop_toTopOf="@+id/cbx_voice_record" />
 
     <CheckBox
-        android:id="@+id/voice_record"
+        android:id="@+id/cbx_voice_record"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -126,13 +126,13 @@
         android:buttonTint="@color/colorAccent"
         android:text="@string/default_button_voice"
         android:textColor="@color/textColor"
-        app:layout_constraintBottom_toBottomOf="@+id/camera"
-        app:layout_constraintEnd_toStartOf="@+id/text_note"
-        app:layout_constraintStart_toEndOf="@+id/camera"
-        app:layout_constraintTop_toTopOf="@+id/camera" />
+        app:layout_constraintBottom_toBottomOf="@+id/cbx_camera"
+        app:layout_constraintEnd_toStartOf="@+id/cbx_text_note"
+        app:layout_constraintStart_toEndOf="@+id/cbx_camera"
+        app:layout_constraintTop_toTopOf="@+id/cbx_camera" />
 
     <CheckBox
-        android:id="@+id/camera"
+        android:id="@+id/cbx_camera"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -146,7 +146,7 @@
         android:text="@string/default_button_camera"
         android:textColor="@color/textColor"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/voice_record"
+        app:layout_constraintEnd_toStartOf="@+id/cbx_voice_record"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView5"
         app:layout_constraintVertical_bias="1.0" />

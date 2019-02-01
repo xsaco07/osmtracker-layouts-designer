@@ -9,8 +9,6 @@ import android.widget.TextView;
 
 import net.osmtracker.layoutsdesigner.R;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 
 public class CustomAdapterListMain extends BaseAdapter {
@@ -41,19 +39,19 @@ public class CustomAdapterListMain extends BaseAdapter {
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
         //makes a references to a class that will stored the views of the current list
-        ViewHolder holder;
+        ViewHolderMain holder;
 
         //then, with this we optimize the scrolling of the listview
         if(view == null){
             //inflate the custom appearance item
             view = LayoutInflater.from(context).inflate(R.layout.item_list_main, null);
-            holder = new ViewHolder();
+            holder = new ViewHolderMain();
             holder.name = (TextView) view.findViewById(R.id.item_layout_name);
             holder.description = (TextView) view.findViewById(R.id.item_layout_description);
             view.setTag(holder);
         }
         else{
-            holder = (ViewHolder) view.getTag();
+            holder = (ViewHolderMain) view.getTag();
         }
 
         //instance the custom item in the list
@@ -67,7 +65,7 @@ public class CustomAdapterListMain extends BaseAdapter {
     }
 
     //simple class to stored the view of the list
-    private static class ViewHolder {
+    private static class ViewHolderMain {
         private TextView name;
         private TextView description;
     }

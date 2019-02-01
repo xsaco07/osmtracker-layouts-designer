@@ -25,6 +25,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity
     private FloatingActionButton fab;
     private String contextTAG = OsmtrackerLayoutsDesigner.Preferences.TAG + ".MainActivity";
     private String storageDir;
+    private String numberRows;
+    private String numberColumns;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,7 +141,10 @@ public class MainActivity extends AppCompatActivity
 
         LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupLayout = inflater.inflate(R.layout.preparation_popup, null);
-
+        final EditText txtLayoutName = (EditText) popupLayout.findViewById(R.id.layout_name);
+        final CheckBox cbxCamera = (CheckBox) popupLayout.findViewById(R.id.cbx_camera);
+        final CheckBox cbxVoiceRecorder = (CheckBox) popupLayout.findViewById(R.id.cbx_voice_record);
+        final CheckBox cbxNotes = (CheckBox) popupLayout.findViewById(R.id.cbx_text_note);
         setSpinners(popupLayout);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
@@ -146,8 +153,16 @@ public class MainActivity extends AppCompatActivity
                 .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        //TODO: OPEN EDITOR
-                        Log.i("#", "TODO: OPEN EDITOR");
+                        Log.i("#", "Opening the Editor with the rows, columns and name assigned by the user");
+                        Intent intent = new Intent(MainActivity.this, Editor.class);
+                        intent.putExtra(OsmtrackerLayoutsDesigner.Preferences.EXTRA_COLUMNS_NAME, numberColumns);
+                        intent.putExtra(OsmtrackerLayoutsDesigner.Preferences.EXTRA_ROWS_NAME, numberRows);
+                        intent.putExtra(OsmtrackerLayoutsDesigner.Preferences.EXTRA_NEW_LAYOUT_NAME, txtLayoutName.getText().toString());
+                        intent.putExtra(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_CAMERA, cbxCamera.isChecked());
+                        intent.putExtra(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_NOTES, cbxNotes.isChecked());
+                        intent.putExtra(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_VOICE_RECORDER, cbxVoiceRecorder.isChecked());
+                        startActivity(intent);
+                        finish();
                     }
                 })
                 .setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
@@ -165,15 +180,19 @@ public class MainActivity extends AppCompatActivity
         AppCompatSpinner columnsSpinner = (AppCompatSpinner) v.findViewById(R.id.spinner_columns);
         final String[] columnsCounter = {"1","2","3"};
 
-        ArrayAdapter adapterColumns = new ArrayAdapter<>(this,
+        ArrayAdapter<String> adapterColumns = new ArrayAdapter<>(this,
                 R.layout.spinner_item, columnsCounter);
+
         adapterColumns.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         columnsSpinner.setAdapter(adapterColumns);
+        //Set the last number in columns list to default
+        int lastColumnsPos = adapterColumns.getPosition(columnsCounter[columnsCounter.length - 1]);
+        columnsSpinner.setSelection(lastColumnsPos);
 
         columnsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String numberColumns = columnsCounter[i];
+                numberColumns = columnsCounter[i];
                 Log.i("#", "Selección columnas: "+ numberColumns);
             }
 
@@ -183,19 +202,20 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-
-
         AppCompatSpinner rowsSpinner = (AppCompatSpinner) v.findViewById(R.id.spinner_rows);
         final String[] rowsCounter = {"1","2","3","4"};
-        ArrayAdapter adapterRows = new ArrayAdapter<>(this,
+        ArrayAdapter<String> adapterRows = new ArrayAdapter<>(this,
                 R.layout.spinner_item, rowsCounter);
         adapterRows.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         rowsSpinner.setAdapter(adapterRows);
+        //Set the last number in rows list to default
+        int lastRowsPos = adapterRows.getPosition(rowsCounter[rowsCounter.length - 1]);
+        rowsSpinner.setSelection(lastRowsPos);
 
         rowsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String numberRows = rowsCounter[i];
+                numberRows = rowsCounter[i];
                 Log.i("#", "Selección filas: "+ numberRows);
             }
 
@@ -310,7 +330,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_btn_action_home) {
-            // Handle the camera action
+            // Handle the cbx_camera action
         } else if (id == R.id.nav_btn_action_editor) {
             showPopup();
 

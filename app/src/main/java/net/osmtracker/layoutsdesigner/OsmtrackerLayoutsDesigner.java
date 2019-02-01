@@ -20,6 +20,12 @@ public class OsmtrackerLayoutsDesigner {
         public final static String VAL_STORAGE_DIR = "/osmtracker";
         public static final String LAYOUTS_SUBDIR = "layouts";
         public static final String LAYOUT_FILE_EXTENSION = ".xml";
+        public static final String EXTRA_COLUMNS_NAME = "columns";
+        public static final String EXTRA_ROWS_NAME = "rows";
+        public static final String EXTRA_NEW_LAYOUT_NAME = "layoutName";
+        public static final String EXTRA_CHECKBOX_CAMERA = "camera_button";
+        public static final String EXTRA_CHECKBOX_VOICE_RECORDER = "voice_recorder_button";
+        public static final String EXTRA_CHECKBOX_NOTES = "notes_button";
 
     }
 

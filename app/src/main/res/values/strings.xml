@@ -16,6 +16,7 @@
     <!--Main Screen-->
     <string name="empty_list_layouts">You don\'t have layouts yet</string>
     <string name="menu_action_search">Search</string>
+    <string name="editor_intent_extras_error">There was a problem creating the layout, try again.</string>
 
     <!-- Preparation popup-->
     <string name="preparing_pop_up_title">Preparing layout</string>
@@ -36,4 +37,8 @@
     <string name="permission_read_storage_needed">The permission to read storage is needed to show the current layouts installed</string>
     <string name="permission_read_storage_denied">You cannot see the layouts installed in your phone</string>
     <string name="permission_grant_settings">You can grant this permission from app settings</string>
+    <string name="title_activity_editor">Editor</string>
+
+    <!--Editor Screen-->
+    <string name="empty_layout_name">New Layout {0}</string>
 </resources>
