@@ -5,9 +5,12 @@ import android.app.AlertDialog;
 import android.app.IntentService;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +28,7 @@ import android.widget.Toast;
 import net.osmtracker.layoutsdesigner.OsmtrackerLayoutsDesigner;
 import net.osmtracker.layoutsdesigner.R;
 import net.osmtracker.layoutsdesigner.activity.MainActivity;
+import net.osmtracker.layoutsdesigner.utils.CheckPermissions;
 import net.osmtracker.layoutsdesigner.utils.CustomGridItemAdapter;
 import net.osmtracker.layoutsdesigner.utils.LayoutButtonGridItem;
 
@@ -63,7 +67,75 @@ public class Editor extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(CheckPermissions.isPermissionDenied(Editor.this, OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION)){
+            Log.i(contextTag, "Permission to write storage denied");
+
+            //if the permission was denied, we push a dialog with an explanation message
+            if(CheckPermissions.needsToExplainToUser(Editor.this, OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION)){
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this);
+                builder.setMessage(R.string.permission_write_storage_needed)
+                        .setTitle(R.string.permission_request_dialog_tittle);
+
+                builder.setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.i(contextTag, "User accept the message");
+                        CheckPermissions.makePermissionRequest(Editor.this, OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION,
+                                OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION_REQUEST_CODE);
+                    }
+                }).setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.i(contextTag, "User declined to accept the permission");
+                        Snackbar snackbar = Snackbar.make(findViewById(R.id.btn_accept), getResources().getString(R.string.permission_grant_settings), Snackbar.LENGTH_LONG)
+                                .setAction(getResources().getString(R.string.snackbar_permission_request_denied_action), new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        Log.i("Intent", "Opening the app settings to grant the permission of read storage");
+                                        startActivity(new Intent(Settings.ACTION_APPLICATION_SETTINGS));
+                                    }
+                                });
+                        snackbar.show();
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+            else{
+                //We don't need to explain
+                CheckPermissions.makePermissionRequest(Editor.this, OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION,
+                        OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION_REQUEST_CODE);
+            }
+        }
+        else{
+            makeLayoutView();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION_REQUEST_CODE: {
+                if(grantResults.length == 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED){
+                    Log.i(contextTag, "The permission to read was denied by the user");
+                    Snackbar.make(findViewById(R.id.btn_accept), getResources().getString(R.string.permission_write_storage_denied), Snackbar.LENGTH_LONG).show();
+                }
+                else{
+                    Log.i(contextTag, "The permission to read was granted");
+                    makeLayoutView();
+                }
+            }
+        }
+    }
+
+    private void makeLayoutView(){
         Bundle extras = this.getIntent().getExtras();
 
         //get the extras from the intent and check if exist and has values to initialize the variable to create the editor view
@@ -98,9 +170,7 @@ public class Editor extends AppCompatActivity {
             gvLayoutEditor.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    //TODO: MAKES THE FUNCTIONALITY TO OPEN THE POP UP AND SET NAME AND ICON TO THE ITEM
                     showPopUp();
-                    //Toast.makeText(getApplicationContext(), "You press " + position, Toast.LENGTH_SHORT).show();
                 }
             });
 
