@@ -35,6 +35,8 @@
     <string name="dialog_accept">Accept</string>
     <string name="dialog_cancel">Cancel</string>
     <string name="permission_read_storage_needed">The permission to read storage is needed to show the current layouts installed</string>
+    <string name="permission_write_storage_needed">The permission to write storage is needed to save the layout to create</string>
+    <string name="permission_write_storage_denied">You cannot save the current layout, first you need to grant the write permission</string>
     <string name="permission_read_storage_denied">You cannot see the layouts installed in your phone</string>
     <string name="permission_grant_settings">You can grant this permission from app settings</string>
     <string name="title_activity_editor">Editor</string>
