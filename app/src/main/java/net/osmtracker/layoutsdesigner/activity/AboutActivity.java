@@ -1,12 +1,8 @@
 package net.osmtracker.layoutsdesigner.activity;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.MenuItem;
 
 import net.osmtracker.layoutsdesigner.R;
 
