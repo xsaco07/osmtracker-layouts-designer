@@ -334,8 +334,6 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_btn_action_editor) {
             showPopup();
 
-        } else if (id == R.id.nav_btn_action_settings) {
-
         } else if (id == R.id.nav_btn_action_about) {
             openAboutActivity();
         }
