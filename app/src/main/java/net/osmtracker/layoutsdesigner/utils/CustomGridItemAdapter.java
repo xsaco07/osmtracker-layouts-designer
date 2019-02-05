@@ -97,14 +97,14 @@ public class CustomGridItemAdapter extends BaseAdapter {
         ConstraintLayout constraintLayout = (ConstraintLayout) convertView.findViewById(R.id.parent_item_layout);
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.clone(constraintLayout);
-        if(item.getItemName().equals("") && item.getImagePath() == null){
+        if(item.getItemName().equals("") && item.getImageURI() == null){
             constraintSet.connect(R.id.imv_item_grid_icon, ConstraintSet.BOTTOM, R.id.parent_item_layout, ConstraintSet.BOTTOM, 6);
             constraintSet.applyTo(constraintLayout);
             holder.txtItemName.setVisibility(View.INVISIBLE);
             holder.imvItemIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_add_circle));
         }
-        else if(item.getImagePath() != null) {
-            holder.imvItemIcon.setImageURI(item.getImagePath());
+        else if(item.getImageURI() != null) {
+            holder.imvItemIcon.setImageURI(item.getImageURI());
         }
         else if(item.getDefaultIcon() != null){
             holder.imvItemIcon.setImageDrawable(item.getDefaultIcon());

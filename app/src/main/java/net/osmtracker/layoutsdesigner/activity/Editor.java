@@ -15,13 +15,17 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,7 +35,9 @@ import net.osmtracker.layoutsdesigner.activity.MainActivity;
 import net.osmtracker.layoutsdesigner.utils.CheckPermissions;
 import net.osmtracker.layoutsdesigner.utils.CustomGridItemAdapter;
 import net.osmtracker.layoutsdesigner.utils.LayoutButtonGridItem;
+import net.osmtracker.layoutsdesigner.utils.XMLGenerator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -47,6 +53,7 @@ public class Editor extends AppCompatActivity {
     private String layoutName;
     private Button btnCancel;
     private Button btnAccept;
+    private Uri currentUri;
 
     // Code returned by the startActivityForResult() to the onActionResult() method
     // Indicates that the user choose correctly to select an image from the gallery
@@ -67,6 +74,124 @@ public class Editor extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        Bundle extras = this.getIntent().getExtras();
+
+        //get the extras from the intent and check if exist and has values to initialize the variable to create the editor view
+        if(extras != null){
+            columnsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_COLUMNS_NAME, "3"));
+            rownsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_ROWS_NAME, "4"));
+
+            layoutName = extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_NEW_LAYOUT_NAME, getResources().getString(R.string.empty_layout_name).replace("{0}",  Calendar.getInstance().getTime().toString()));
+            if(layoutName.equals("") || layoutName.isEmpty()){
+                layoutName = getResources().getString(R.string.empty_layout_name).replace("{0}", Calendar.getInstance().getTime().toString());
+            }
+            txtLayoutName = (TextView) findViewById(R.id.txt_layout_name);
+            txtLayoutName.setText(layoutName);
+
+            boolean notesCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_NOTES, false);
+            boolean cameraCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_CAMERA, false);
+            boolean voiceRecorderCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_VOICE_RECORDER, false);
+            gridItemsArray = new ArrayList<LayoutButtonGridItem>();
+            int amountToSubstract = checkIfNeedsDefaultButtons(notesCheckbox, cameraCheckbox, voiceRecorderCheckbox);
+            int totalItems = (columnsNum * rownsNum) - amountToSubstract;
+            //set the total items created by default in the array
+            for(int i = 0; i < totalItems; i++){
+                gridItemsArray.add(new LayoutButtonGridItem(""));
+            }
+
+            gvLayoutEditor = (GridView) findViewById(R.id.grid_view_editor);
+            //pass the num columns assigned by the user
+            gvLayoutEditor.setNumColumns(columnsNum);
+            gridAdapter = new CustomGridItemAdapter(this, gridItemsArray);
+            gvLayoutEditor.setAdapter(gridAdapter);
+            gvLayoutEditor.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    LayoutButtonGridItem currentGridItem =  gridItemsArray.get(position);
+                    if (currentGridItem.getDefaultIcon() != null){
+                        //The selected button is an default button chosen before the editor activity was open, the user can't edit this button
+                        Toast.makeText(getApplicationContext(), R.string.can_not_edit_button_message, Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+                        showPopUp(currentGridItem);
+                    }
+                    //Toast.makeText(getApplicationContext(), "You press " + position, Toast.LENGTH_SHORT).show();
+
+                }
+            });
+
+            btnCancel = (Button) findViewById(R.id.btn_cancel);
+            btnCancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+                    builder.setTitle(R.string.cancelling_creation)
+                            .setMessage(R.string.cancel_verification)
+                            .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    onBackPressed();
+                                }
+                            })
+                            .setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.cancel();
+                                }
+                            })
+                            .setCancelable(true)
+                            .create().show();
+                }
+            });
+            btnAccept = (Button) findViewById(R.id.btn_accept);
+            btnAccept.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //TODO: SAVE THE LAYOUT (ONLY IF THE PERMISSION TO WRITE IS GRANTED)
+                    if(isTotallyFilled()){
+                        try {
+                            XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName,rownsNum,columnsNum);
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+                            builder.setTitle(R.string.succesfully_created_title)
+                                    .setMessage(R.string.succesfully_created_message)
+                                    .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            onBackPressed();
+                                        }
+                                    })
+                                    .create().show();
+                        } catch (IOException e) {
+                            Toast.makeText(Editor.this,R.string.error_creating_message, Toast.LENGTH_LONG).show();
+                            e.printStackTrace();
+                        }
+                    }
+                    else{
+                        Toast.makeText(Editor.this,R.string.some_empty_buttons, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+
+        }
+        else{
+            Toast.makeText(getApplicationContext(), R.string.editor_intent_extras_error, Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        }
+    }
+
+    private boolean isTotallyFilled(){
+        boolean result = true;
+        for (int i = 0; i < gridItemsArray.size(); i++) {
+            if(gridItemsArray.get(i).getItemName() == ""){
+                result = false;
+                break;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -102,6 +227,7 @@ public class Editor extends AppCompatActivity {
                                     }
                                 });
                         snackbar.show();
+                        //TODO: TURN OFF THE SAVE BUTTON IN THE EDTOR SCREEN
                     }
                 });
 
@@ -114,9 +240,6 @@ public class Editor extends AppCompatActivity {
                         OsmtrackerLayoutsDesigner.Preferences.WRITE_STORAGE_PERMISSION_REQUEST_CODE);
             }
         }
-        else{
-            makeLayoutView();
-        }
     }
 
     @Override
@@ -126,74 +249,12 @@ public class Editor extends AppCompatActivity {
                 if(grantResults.length == 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED){
                     Log.i(contextTag, "The permission to read was denied by the user");
                     Snackbar.make(findViewById(R.id.btn_accept), getResources().getString(R.string.permission_write_storage_denied), Snackbar.LENGTH_LONG).show();
+                    //TODO: TURN OFF THE SAVE BUTTON IN THE EDITOR SCREEN
                 }
                 else{
                     Log.i(contextTag, "The permission to read was granted");
-                    makeLayoutView();
                 }
             }
-        }
-    }
-
-    private void makeLayoutView(){
-        Bundle extras = this.getIntent().getExtras();
-
-        //get the extras from the intent and check if exist and has values to initialize the variable to create the editor view
-        if(extras != null){
-            columnsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_COLUMNS_NAME, "3"));
-            rownsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_ROWS_NAME, "4"));
-
-            layoutName = extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_NEW_LAYOUT_NAME, getResources().getString(R.string.empty_layout_name).replace("{0}",  Calendar.getInstance().getTime().toString()));
-            if(layoutName.equals("") || layoutName.isEmpty()){
-                layoutName = getResources().getString(R.string.empty_layout_name).replace("{0}", Calendar.getInstance().getTime().toString());
-            }
-            txtLayoutName = (TextView) findViewById(R.id.txt_layout_name);
-            txtLayoutName.setText(layoutName);
-
-            boolean notesCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_NOTES, false);
-            boolean cameraCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_CAMERA, false);
-            boolean voiceRecorderCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_VOICE_RECORDER, false);
-            gridItemsArray = new ArrayList<LayoutButtonGridItem>();
-            int amountToSubstract = checkIfNeedsDefaultButtons(notesCheckbox, cameraCheckbox, voiceRecorderCheckbox);
-            int totalItems = (columnsNum * rownsNum) - amountToSubstract;
-            //TODO: VERIFY IF THE DEFAULT BUTTONS ARE CHECKED AND CREATE THEM IN THE ARRAY
-            //set the total items created by default in the array
-            for(int i = 0; i < totalItems; i++){
-                gridItemsArray.add(new LayoutButtonGridItem(""));
-            }
-
-            gvLayoutEditor = (GridView) findViewById(R.id.grid_view_editor);
-            //pass the num columns assigned by the user
-            gvLayoutEditor.setNumColumns(columnsNum);
-            gridAdapter = new CustomGridItemAdapter(this, gridItemsArray);
-            gvLayoutEditor.setAdapter(gridAdapter);
-            gvLayoutEditor.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    showPopUp();
-                }
-            });
-
-            btnCancel = (Button) findViewById(R.id.btn_cancel);
-            btnCancel.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //TODO: SHOW A MESSAGE WITH AN ALERT
-                }
-            });
-            btnAccept = (Button) findViewById(R.id.btn_accept);
-            btnAccept.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //TODO: SAVE THE LAYOUT
-                }
-            });
-
-        }
-        else{
-            Toast.makeText(getApplicationContext(), R.string.editor_intent_extras_error, Toast.LENGTH_LONG).show();
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
         }
     }
 
@@ -227,17 +288,35 @@ public class Editor extends AppCompatActivity {
         return true;
     }
 
-    private void showPopUp(){
+    private void showPopUp(final LayoutButtonGridItem currentGridItem){
         LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         current_new_button_popup = inflater.inflate(R.layout.new_button_popup, null);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        final EditText buttonName = current_new_button_popup.findViewById(R.id.editTextButtonName);
+        final TextView imagePathTextView = current_new_button_popup.findViewById(R.id.url_text_view);
+
+        image_button = (ImageButton)current_new_button_popup.findViewById(R.id.imageButton);
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
         builder.setTitle(R.string.new_button_pop_up_title)
                 .setView(current_new_button_popup)
                 .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        //
+
+                        //Checking if the user changed the name or the image of the item
+                        if( !currentGridItem.getItemName().equals(buttonName.getText().toString()) || currentGridItem.getImagePath() != imagePathTextView.getText().toString()) {
+
+                            Log.e("#", "Current name: "+ currentGridItem.getItemName() + " nombre en el edit text: "+ buttonName.getText().toString());
+                            currentGridItem.setItemName(buttonName.getText().toString());
+                            currentGridItem.setImagePath(imagePathTextView.getText().toString());
+                            currentGridItem.setImageURI(currentUri);
+
+                            gridAdapter.notifyDataSetChanged();
+                            gvLayoutEditor.setAdapter(gridAdapter);
+                            currentUri = null;
+                        }
+
 
                     }
                 })
@@ -246,9 +325,55 @@ public class Editor extends AppCompatActivity {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.cancel();
                     }
-                })
-                .setCancelable(true)
-                .create().show();
+                });
+
+        //Check if the current gridItem has name or image, and setting the popup with that name/image
+        if(currentGridItem.getItemName() != "" || currentGridItem.getImageURI() != null){
+            buttonName.setText(currentGridItem.getItemName());
+            imagePathTextView.setText(currentGridItem.getImagePath());
+            image_button.setMaxWidth(100);
+            image_button.setMaxHeight(100);
+            image_button.setPadding(9,9,9,9);
+            image_button.setImageURI(currentGridItem.getImageURI());
+        }
+
+        final AlertDialog dialog = builder.create();
+
+
+        buttonName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Button btOk = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                if(charSequence.length() >=0) {
+                    try {
+
+                        if(charSequence.length() == 0){
+                            btOk.setEnabled(false);
+                        }
+                        else{
+                            btOk.setEnabled(true);
+                        }
+
+                    }catch (Exception e){
+                        Log.e(contextTag, "Error editing the button name");
+
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        dialog.show();
+
+
     }
 
     // This method throws the intent to open the gallery so the user can choose an icon for the new button in the layout
@@ -273,7 +398,7 @@ public class Editor extends AppCompatActivity {
 
     // This method writes the image path on the pop up window and shows the icon selected by the user
     private void showPathAndIcon(Uri selectedImage){
-
+        currentUri = selectedImage;
         sample_url = (TextView)current_new_button_popup.findViewById(R.id.url_text_view);
         image_button = (ImageButton)current_new_button_popup.findViewById(R.id.imageButton);
 

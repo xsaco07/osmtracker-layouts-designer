@@ -43,11 +43,19 @@
 
     <!--Editor Screen-->
     <string name="empty_layout_name">New Layout {0}</string>
+    <string name="cancel_verification">Are you sure?</string>
+    <string name="cancelling_creation">Cancelling the layout creation</string>
+    <string name="can_not_edit_button_message">You can not edit this button</string>
+    <string name="succesfully_created_title">Layout created</string>
+    <string name="succesfully_created_message">The layout was created successfully, now you can set it up in the OSMTracker application!</string>
+    <string name="error_creating_message">Error creating the layout file</string>
+    <string name="some_empty_buttons">There are empty buttons</string>
 
     <!--New button Pop Up-->
     <string name="new_button_pop_up_title">New Button</string>
     <string name="icon">Choose icon:</string>
     <string name="button_name">Name</string>
     <string name="url_text">Image URL</string>
+    <string name="empty_button_name">The name of the button is empty</string>
 
 </resources>
