@@ -334,14 +334,18 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_btn_action_editor) {
             showPopup();
 
-        } else if (id == R.id.nav_btn_action_settings) {
-
         } else if (id == R.id.nav_btn_action_about) {
-
+            openAboutActivity();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+    private void openAboutActivity(){
+
+        startActivity(new Intent(getApplicationContext(), AboutActivity.class));
+
+    }
+
 }
