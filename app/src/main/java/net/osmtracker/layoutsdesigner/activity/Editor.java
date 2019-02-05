@@ -2,7 +2,6 @@ package net.osmtracker.layoutsdesigner.activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.IntentService;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,7 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -31,7 +29,6 @@ import android.widget.Toast;
 
 import net.osmtracker.layoutsdesigner.OsmtrackerLayoutsDesigner;
 import net.osmtracker.layoutsdesigner.R;
-import net.osmtracker.layoutsdesigner.activity.MainActivity;
 import net.osmtracker.layoutsdesigner.utils.CheckPermissions;
 import net.osmtracker.layoutsdesigner.utils.CustomGridItemAdapter;
 import net.osmtracker.layoutsdesigner.utils.LayoutButtonGridItem;
@@ -49,11 +46,13 @@ public class Editor extends AppCompatActivity {
     private CustomGridItemAdapter gridAdapter;
     private ArrayList<LayoutButtonGridItem> gridItemsArray;
     private int columnsNum = 0;
-    private int rownsNum = 0;
+    private int rowsNum = 0;
     private String layoutName;
     private Button btnCancel;
     private Button btnAccept;
     private Uri currentUri;
+    private boolean flagUriChanged;
+
 
     // Code returned by the startActivityForResult() to the onActionResult() method
     // Indicates that the user choose correctly to select an image from the gallery
@@ -79,8 +78,10 @@ public class Editor extends AppCompatActivity {
 
         //get the extras from the intent and check if exist and has values to initialize the variable to create the editor view
         if(extras != null){
+
+            flagUriChanged = false;
             columnsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_COLUMNS_NAME, "3"));
-            rownsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_ROWS_NAME, "4"));
+            rowsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_ROWS_NAME, "4"));
 
             layoutName = extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_NEW_LAYOUT_NAME, getResources().getString(R.string.empty_layout_name).replace("{0}",  Calendar.getInstance().getTime().toString()));
             if(layoutName.equals("") || layoutName.isEmpty()){
@@ -94,7 +95,9 @@ public class Editor extends AppCompatActivity {
             boolean voiceRecorderCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_VOICE_RECORDER, false);
             gridItemsArray = new ArrayList<LayoutButtonGridItem>();
             int amountToSubstract = checkIfNeedsDefaultButtons(notesCheckbox, cameraCheckbox, voiceRecorderCheckbox);
-            int totalItems = (columnsNum * rownsNum) - amountToSubstract;
+
+            int totalItems = (columnsNum * rowsNum) - amountToSubstract;
+
             //set the total items created by default in the array
             for(int i = 0; i < totalItems; i++){
                 gridItemsArray.add(new LayoutButtonGridItem(""));
@@ -152,7 +155,9 @@ public class Editor extends AppCompatActivity {
                     //TODO: SAVE THE LAYOUT (ONLY IF THE PERMISSION TO WRITE IS GRANTED)
                     if(isTotallyFilled()){
                         try {
-                            XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName,rownsNum,columnsNum);
+
+                            XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName, rowsNum,columnsNum);
+
 
                             AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
                             builder.setTitle(R.string.succesfully_created_title)
@@ -305,16 +310,22 @@ public class Editor extends AppCompatActivity {
                     public void onClick(DialogInterface dialogInterface, int i) {
 
                         //Checking if the user changed the name or the image of the item
-                        if( !currentGridItem.getItemName().equals(buttonName.getText().toString()) || currentGridItem.getImagePath() != imagePathTextView.getText().toString()) {
+
+                        if( !currentGridItem.getItemName().equals(buttonName.getText().toString())) {
 
                             Log.e("#", "Current name: "+ currentGridItem.getItemName() + " nombre en el edit text: "+ buttonName.getText().toString());
                             currentGridItem.setItemName(buttonName.getText().toString());
-                            currentGridItem.setImagePath(imagePathTextView.getText().toString());
+                            gridAdapter.notifyDataSetChanged();
+                            gvLayoutEditor.setAdapter(gridAdapter);
+                        }
+                        if(flagUriChanged){
                             currentGridItem.setImageURI(currentUri);
-
+                            currentGridItem.setImagePath(imagePathTextView.getText().toString());
                             gridAdapter.notifyDataSetChanged();
                             gvLayoutEditor.setAdapter(gridAdapter);
                             currentUri = null;
+                            flagUriChanged = false;
+
                         }
 
 
@@ -399,6 +410,9 @@ public class Editor extends AppCompatActivity {
     // This method writes the image path on the pop up window and shows the icon selected by the user
     private void showPathAndIcon(Uri selectedImage){
         currentUri = selectedImage;
+
+        flagUriChanged = true;
+
         sample_url = (TextView)current_new_button_popup.findViewById(R.id.url_text_view);
         image_button = (ImageButton)current_new_button_popup.findViewById(R.id.imageButton);
 
