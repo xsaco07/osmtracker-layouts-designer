@@ -60,7 +60,7 @@
         android:id="@+id/textView8"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="64dp"
         android:gravity="center"
         android:text="@string/more_information"
         android:textColor="@color/textColor"
@@ -68,19 +68,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView2" />
-
-    <TextView
-        android:textColor="@color/textColor"
-        android:id="@+id/textView9"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:gravity="center"
-        android:text="@string/lab_mention"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="@+id/textView10"
-        app:layout_constraintStart_toStartOf="@+id/textView10"
-        app:layout_constraintTop_toBottomOf="@+id/textView10" />
 
     <TextView
         android:id="@+id/textView10"
@@ -99,33 +86,19 @@
         app:layout_constraintTop_toBottomOf="@+id/textView8" />
 
     <TextView
-        android:id="@+id/textView11"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:autoLink="web"
-        android:gravity="center"
-        android:linksClickable="true"
-        android:padding="5dp"
-        android:text="@string/lab_github_address"
-        android:textColor="@color/textColor"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="@+id/textView9"
-        app:layout_constraintStart_toStartOf="@+id/textView9"
-        app:layout_constraintTop_toBottomOf="@+id/textView9" />
-
-    <TextView
         android:id="@+id/textView12"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginTop="32dp"
         android:gravity="center"
         android:text="@string/where_the_layouts_are"
         android:textColor="@color/textColor"
         android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="@+id/textView11"
-        app:layout_constraintStart_toStartOf="@+id/textView11"
-        app:layout_constraintTop_toBottomOf="@+id/textView11" />
+        app:layout_constraintEnd_toEndOf="@+id/textView10"
+        app:layout_constraintStart_toStartOf="@+id/textView10"
+        app:layout_constraintTop_toBottomOf="@+id/textView10" />
 
     <TextView
         android:id="@+id/textView13"
