@@ -350,39 +350,23 @@ public class Editor extends AppCompatActivity {
 
         final AlertDialog dialog = builder.create();
 
-
         buttonName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Button btOk = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                if(charSequence.length() >=0) {
-                    try {
-
-                        if(charSequence.length() == 0){
-                            btOk.setEnabled(false);
-                        }
-                        else{
-                            btOk.setEnabled(true);
-                        }
-
-                    }catch (Exception e){
-                        Log.e(contextTag, "Error editing the button name");
-
-                    }
-                }
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
-
+                if (buttonName.getText().toString().isEmpty()) dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                else dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(true);
             }
         });
         dialog.show();
+        dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
 
     }
