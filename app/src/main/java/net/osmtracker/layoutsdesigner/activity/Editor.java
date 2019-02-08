@@ -95,9 +95,11 @@ public class Editor extends AppCompatActivity {
             boolean voiceRecorderCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_VOICE_RECORDER, false);
             gridItemsArray = new ArrayList<LayoutButtonGridItem>();
             int amountToSubstract = checkIfNeedsDefaultButtons(notesCheckbox, cameraCheckbox, voiceRecorderCheckbox);
-
-            int totalItems = (columnsNum * rowsNum) - amountToSubstract;
-
+            int totalItems = (columnsNum * rowsNum) - amountToSubstract < 0 ? 0 : (columnsNum * rowsNum) - amountToSubstract;
+            if((columnsNum * rowsNum) - amountToSubstract < 0){
+                rowsNum = 1;
+                columnsNum = amountToSubstract;
+            }
             //set the total items created by default in the array
             for(int i = 0; i < totalItems; i++){
                 gridItemsArray.add(new LayoutButtonGridItem(""));
