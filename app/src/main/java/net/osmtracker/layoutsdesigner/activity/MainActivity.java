@@ -12,6 +12,8 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.AppCompatSpinner;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -147,7 +149,7 @@ public class MainActivity extends AppCompatActivity
         final CheckBox cbxNotes = (CheckBox) popupLayout.findViewById(R.id.cbx_text_note);
         setSpinners(popupLayout);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
         builder.setTitle(R.string.preparing_pop_up_title)
                 .setView(popupLayout)
                 .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
@@ -171,8 +173,27 @@ public class MainActivity extends AppCompatActivity
                         dialogInterface.cancel();
                     }
                 })
-                .setCancelable(true)
-                .create().show();
+                .setCancelable(true);
+
+        final AlertDialog dialog = builder.create();
+
+        txtLayoutName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (txtLayoutName.getText().toString().isEmpty()) dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                else dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            }
+        });
+        dialog.show();
+        dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
     }
 
     public void setSpinners(View v){

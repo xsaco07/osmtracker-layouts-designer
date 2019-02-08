@@ -49,7 +49,7 @@
     <string name="succesfully_created_title">Layout created</string>
     <string name="succesfully_created_message">The layout was created successfully, now you can set it up in the OSMTracker application!</string>
     <string name="error_creating_message">Error creating the layout file</string>
-    <string name="some_empty_buttons">There are empty buttons</string>
+    <string name="some_empty_buttons">All buttons must be edited</string>
 
     <!--New button Pop Up-->
     <string name="new_button_pop_up_title">New Button</string>
