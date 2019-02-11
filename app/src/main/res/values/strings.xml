@@ -69,4 +69,7 @@
     <string name="layouts_path">Intern memory/osmtracker/layouts/</string>
     <string name="where_the_layouts_are">The layouts are saved in the next path:</string>
 
+    <!--Others-->
+    <string name="EMPTY"> </string>
+
 </resources>
