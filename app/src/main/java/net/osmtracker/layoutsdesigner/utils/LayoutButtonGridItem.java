@@ -2,19 +2,12 @@ package net.osmtracker.layoutsdesigner.utils;
 
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.text.Editable;
 
 public class LayoutButtonGridItem {
     private String itemName;
     private Uri imageURI;
     private String imagePath;
     private Drawable defaultIcon;
-
-    public LayoutButtonGridItem(String name, Uri path){
-        this.itemName = name;
-        this.imageURI = path;
-        this.defaultIcon = null;
-    }
 
     public LayoutButtonGridItem(String name, Drawable icon){
         this.itemName = name;

@@ -32,14 +32,12 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import net.osmtracker.layoutsdesigner.OsmtrackerLayoutsDesigner;
 import net.osmtracker.layoutsdesigner.R;
 import net.osmtracker.layoutsdesigner.utils.CheckPermissions;
 import net.osmtracker.layoutsdesigner.utils.CustomAdapterListMain;
 import net.osmtracker.layoutsdesigner.utils.CustomLayoutsUtils;
 import net.osmtracker.layoutsdesigner.utils.ItemListMain;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -214,7 +212,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 numberColumns = columnsCounter[i];
-                Log.i("#", "Selección columnas: "+ numberColumns);
             }
 
             @Override
@@ -237,7 +234,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 numberRows = rowsCounter[i];
-                Log.i("#", "Selección filas: "+ numberRows);
             }
 
             @Override
@@ -265,7 +261,6 @@ public class MainActivity extends AppCompatActivity
 
     //Use this method to refresh the MainActivity when a new layouts is created or downloaded from the OSMTracker App
     private void refreshActivity(){
-        Toast.makeText(getApplicationContext(), "Preparing the layouts", Toast.LENGTH_SHORT).show();
         ListView listLayoutContainer = (ListView) findViewById(R.id.list_layouts);
         listLayouts(listLayoutContainer);
     }
