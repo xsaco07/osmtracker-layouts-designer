@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -366,10 +367,13 @@ public class Editor extends AppCompatActivity {
     // This method throws the intent to open the gallery so the user can choose an icon for the new button in the layout
     // Is called when the user presses the Icon in the pop up
     public void selectImage(View view){
-
-        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-        intent.setType("image/*");
-        startActivityForResult(intent, OPEN_GALLERY_CODE); // Start the activity waiting for a code as a response (OPEN_GALLERY_CODE)
+        Intent galleryIntent = new Intent();
+        Uri requestedData = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+        String intentAction = Intent.ACTION_PICK;
+        String dataType = "image/*";
+        galleryIntent.setDataAndType(requestedData,dataType);
+        galleryIntent.setAction(intentAction);
+        startActivityForResult(galleryIntent, OPEN_GALLERY_CODE); // Start the activity waiting for a code as a response (OPEN_GALLERY_CODE)
     }
 
     // This method is called when the intent to open the gallery is finished or closed
