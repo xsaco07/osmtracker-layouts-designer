@@ -51,8 +51,11 @@ public class Editor extends AppCompatActivity {
     // Code returned by the startActivityForResult() to the onActionResult() method
     // Indicates that the user choose correctly to select an image from the gallery
     private int OPEN_GALLERY_CODE = 10;
+
     private Uri currentUriImage;
     private View newButtonLayout;
+
+    private boolean USER_CANCEL_EDITION = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,65 +111,14 @@ public class Editor extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), R.string.can_not_edit_button_message, Toast.LENGTH_SHORT).show();
                     }
                     else {
-                        showPopUp(currentGridItem);
+                        showNewButtonPopUp(currentGridItem);
                     }
 
                 }
             });
 
-            Button btnCancel = (Button) findViewById(R.id.btn_cancel);
-            btnCancel.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-                    builder.setTitle(R.string.cancelling_creation)
-                            .setMessage(R.string.cancel_verification)
-                            .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    onBackPressed();
-                                }
-                            })
-                            .setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    dialogInterface.cancel();
-                                }
-                            })
-                            .setCancelable(true)
-                            .create().show();
-                }
-            });
-            Button btnAccept = (Button) findViewById(R.id.btn_accept);
-            btnAccept.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(isTotallyFilled()){
-                        try {
-
-                            XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName, rowsNum,columnsNum);
-
-
-                            AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-                            builder.setTitle(R.string.succesfully_created_title)
-                                    .setMessage(R.string.succesfully_created_message)
-                                    .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            onBackPressed();
-                                        }
-                                    })
-                                    .create().show();
-                        } catch (IOException e) {
-                            Toast.makeText(Editor.this,R.string.error_creating_message, Toast.LENGTH_LONG).show();
-                            e.printStackTrace();
-                        }
-                    }
-                    else{
-                        Toast.makeText(Editor.this,R.string.some_empty_buttons, Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
+            manageCancelEditionButton();
+            manageAcceptEditionBUtton();
 
         }
         else{
@@ -176,10 +128,50 @@ public class Editor extends AppCompatActivity {
         }
     }
 
+    private void manageCancelEditionButton(){
+        Button btnCancel = (Button) findViewById(R.id.btn_cancel);
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                userCancelLayoutEdition();
+            }
+        });
+    }
+
+    private void manageAcceptEditionBUtton(){
+        Button btnAccept = (Button) findViewById(R.id.btn_accept);
+        btnAccept.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isTotallyFilled()){
+                    try {
+                        XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName, rowsNum,columnsNum);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+                        builder.setTitle(R.string.succesfully_created_title)
+                                .setMessage(R.string.succesfully_created_message)
+                                .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        goHome();
+                                    }
+                                })
+                                .create().show();
+                    } catch (IOException e) {
+                        Toast.makeText(Editor.this,R.string.error_creating_message, Toast.LENGTH_LONG).show();
+                        e.printStackTrace();
+                    }
+                }
+                else{
+                    Toast.makeText(Editor.this,R.string.some_empty_buttons, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
     private boolean isTotallyFilled(){
         boolean result = true;
         for (int i = 0; i < gridItemsArray.size(); i++) {
-            if(gridItemsArray.get(i).getItemName() == ""){
+            if(gridItemsArray.get(i).getItemName().equals("")){
                 result = false;
                 break;
             }
@@ -266,20 +258,48 @@ public class Editor extends AppCompatActivity {
         return i;
     }
 
+    private void userCancelLayoutEdition(){
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+
+        builder.setTitle(R.string.cancelling_creation);
+        builder.setMessage(R.string.cancel_verification);
+        
+        builder.setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                goHome();
+            }});
+
+        builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }});
+
+        builder.setCancelable(true);
+        builder.create();
+        builder.show();
+
+    }
+
     @Override
     public void onBackPressed() {
-        //TODO: push a dialog notifying that this action delete the current layout without save it
-        startActivity(new Intent(this, MainActivity.class));
+        userCancelLayoutEdition(); // Warn the user that the layout will not be saved if press Back button.
+    }
+
+    private void goHome(){
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
         finish();
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        goHome();
         return true;
     }
 
-    private void showPopUp(final LayoutButtonGridItem currentGridItem){
+    private void showNewButtonPopUp(final LayoutButtonGridItem currentGridItem){
         LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
         newButtonLayout = inflater.inflate(R.layout.new_button_popup, null);
 
@@ -331,7 +351,6 @@ public class Editor extends AppCompatActivity {
         gvLayoutEditor.setAdapter(gridAdapter);
     }
 
-
     private void checkIfButtonNameEmpty(EditText buttonName, AlertDialog dialog) {
         if (buttonName.getText().toString().isEmpty()) dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         else dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(true);
@@ -365,7 +384,6 @@ public class Editor extends AppCompatActivity {
     }
 
     // This method throws the intent to open the gallery so the user can choose an icon for the new button in the layout
-    // Is called when the user presses the Icon in the pop up
     public void selectImage(View view){
         Intent galleryIntent = new Intent();
         Uri requestedData = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
@@ -387,14 +405,12 @@ public class Editor extends AppCompatActivity {
         }
     }
 
-    // This method writes the image path on the pop up window for the first time
     private void setPathInPopUp(Uri selectedImage){
         currentUriImage = selectedImage;
         TextView imagePathView = (TextView) newButtonLayout.findViewById(R.id.url_text_view);
-        imagePathView.setText(getPath(selectedImage));
+        imagePathView.setText(getUriPath(selectedImage));
     }
 
-    // This method shows the icon selected by the user for the first time
     private void setIconInPopUp(Uri selectedImage){
         ImageButton PopUpImageBUtton = (ImageButton) newButtonLayout.findViewById(R.id.imageButton);
         PopUpImageBUtton.setMaxWidth(100);
@@ -404,8 +420,7 @@ public class Editor extends AppCompatActivity {
 
     }
 
-    // This method returns the path of an Uri object as a string
-    private String getPath(Uri uri) {
+    private String getUriPath(Uri uri) {
         String[] projection = { android.provider.MediaStore.Images.Media.DATA };
         Cursor cursor = managedQuery(uri, projection, null, null, null);
         int column_index = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA);
