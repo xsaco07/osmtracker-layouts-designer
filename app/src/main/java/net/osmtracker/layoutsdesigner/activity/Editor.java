@@ -169,14 +169,10 @@ public class Editor extends AppCompatActivity {
     }
 
     private boolean isTotallyFilled(){
-        boolean result = true;
-        for (int i = 0; i < gridItemsArray.size(); i++) {
-            if(gridItemsArray.get(i).getItemName().equals("")){
-                result = false;
-                break;
-            }
+        for (LayoutButtonGridItem currentItem : gridItemsArray) {
+            if (currentItem.getItemName().equals("")) return false;
         }
-        return result;
+        return true;
     }
 
     @Override
