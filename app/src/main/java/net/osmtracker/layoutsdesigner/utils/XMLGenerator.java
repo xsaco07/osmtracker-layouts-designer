@@ -4,26 +4,33 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 import android.util.Xml;
-import android.widget.Toast;
-
 import net.osmtracker.layoutsdesigner.OsmtrackerLayoutsDesigner;
 import net.osmtracker.layoutsdesigner.R;
-
 import org.xmlpull.v1.XmlSerializer;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.io.File;
 
 public class XMLGenerator {
 
-    private Context context;
-
+    /**
+     * This method creates the xml file with the information in the editor activity buttons
+     * The xml files are saved in /osmtracker/layouts/
+     *
+     * @param context           The editor activity context
+     *
+     * @param gridItemsArray    The array with the buttons information
+     *
+     * @param layoutName        The name introduced by the user, this is the name of the xml file
+     *
+     * @param rows              The numbers of rows in the new layout
+     *
+     * @param columns           The numbers of columns in the new layout
+     * @throws IOException
+     */
     public static void generateXML(Context context, ArrayList<LayoutButtonGridItem> gridItemsArray, String layoutName, int rows, int columns) throws IOException {
-
 
         layoutName = layoutName + OsmtrackerLayoutsDesigner.Preferences.XML_EXTENSION;
 
@@ -44,57 +51,38 @@ public class XMLGenerator {
 
                 serializer.startTag("", "button");
 
-                if (currentItem.getItemName() != null) {
-
-                    //VOICE RECORD
-                    if (currentItem.getItemName().equals(context.getResources().getString(R.string.default_button_voice))) {
-                        serializer.attribute("", "label", currentItem.getItemName());
-                        serializer.attribute("", "type", "voicerec");
-                        serializer.attribute("", "icon", OsmtrackerLayoutsDesigner.Preferences.VOICE_RECORD_ICON_PATH);
-                    }
-                    //TEXT NOTE
-                    else if (currentItem.getItemName().equals(context.getResources().getString(R.string.default_button_text_note))) {
-                        serializer.attribute("", "label", currentItem.getItemName());
-                        serializer.attribute("", "type", "textnote");
-                        serializer.attribute("", "icon", OsmtrackerLayoutsDesigner.Preferences.TEXT_NOTE_ICON_PATH);
-                    }
-                    //CAMERA
-                    else if (currentItem.getItemName().equals(context.getResources().getString(R.string.default_button_camera))) {
-                        serializer.attribute("", "label", currentItem.getItemName());
-                        serializer.attribute("", "type", "picture");
-                        serializer.attribute("", "icon", OsmtrackerLayoutsDesigner.Preferences.CAMERA_ICON_PATH);
-                    } else {
-                        //Checking if the button have icon
-                        if (currentItem.getImagePath() != null) {
-                            serializer.attribute("", "type", "tag");
-                            serializer.attribute("", "label", currentItem.getItemName());
-                            serializer.attribute("", "icon", currentItem.getImagePath().replace(Environment.getExternalStorageDirectory().toString(),
-                                    OsmtrackerLayoutsDesigner.Preferences.EXIT_LAYOUT_DIR));
-                        }
-                        //The button doesn't have icon
-                        else {
-                            serializer.attribute("", "type", "tag");
-                            serializer.attribute("", "label", currentItem.getItemName());
-                        }
-                    }
+                //VOICE RECORD
+                if (currentItem.getItemName().equals(context.getResources().getString(R.string.default_button_voice))) {
+                    serializer.attribute("", "label", currentItem.getItemName());
+                    serializer.attribute("", "type", "voicerec");
+                    serializer.attribute("", "icon", OsmtrackerLayoutsDesigner.Preferences.VOICE_RECORD_ICON_PATH);
                 }
-
-                //The button doesn't have have name
-                else {
-                    //Maybe the user only put an icon in the button
+                //TEXT NOTE
+                else if (currentItem.getItemName().equals(context.getResources().getString(R.string.default_button_text_note))) {
+                    serializer.attribute("", "label", currentItem.getItemName());
+                    serializer.attribute("", "type", "textnote");
+                    serializer.attribute("", "icon", OsmtrackerLayoutsDesigner.Preferences.TEXT_NOTE_ICON_PATH);
+                }
+                //CAMERA
+                else if (currentItem.getItemName().equals(context.getResources().getString(R.string.default_button_camera))) {
+                    serializer.attribute("", "label", currentItem.getItemName());
+                    serializer.attribute("", "type", "picture");
+                    serializer.attribute("", "icon", OsmtrackerLayoutsDesigner.Preferences.CAMERA_ICON_PATH);
+                } else {
+                    //Checking if the button have icon
                     if (currentItem.getImagePath() != null) {
                         serializer.attribute("", "type", "tag");
-                        serializer.attribute("", "label", "-");
+                        serializer.attribute("", "label", currentItem.getItemName());
                         serializer.attribute("", "icon", currentItem.getImagePath().replace(Environment.getExternalStorageDirectory().toString(),
                                 OsmtrackerLayoutsDesigner.Preferences.EXIT_LAYOUT_DIR));
                     }
-                    //The button information is empty
+                    //The button doesn't have icon
                     else {
                         serializer.attribute("", "type", "tag");
-                        serializer.attribute("", "label", "-");
+                        serializer.attribute("", "label", currentItem.getItemName());
                     }
-
                 }
+
                 serializer.endTag("", "button");
                 index++;
             }
