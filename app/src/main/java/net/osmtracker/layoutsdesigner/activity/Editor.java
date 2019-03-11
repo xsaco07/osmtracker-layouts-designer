@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -23,7 +24,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
-import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,7 +40,6 @@ import java.util.Calendar;
 
 public class Editor extends AppCompatActivity {
 
-    private TextView txtLayoutName;
     private String contextTag = OsmtrackerLayoutsDesigner.Preferences.TAG + ".Editor";
     private GridView gvLayoutEditor;
     private CustomGridItemAdapter gridAdapter;
@@ -48,21 +47,15 @@ public class Editor extends AppCompatActivity {
     private int columnsNum = 0;
     private int rowsNum = 0;
     private String layoutName;
-    private Button btnCancel;
-    private Button btnAccept;
-    private Uri currentUri;
-    private boolean flagUriChanged;
-
 
     // Code returned by the startActivityForResult() to the onActionResult() method
     // Indicates that the user choose correctly to select an image from the gallery
-    private int SELECT_IMAGE = 10;
+    private int OPEN_GALLERY_CODE = 10;
 
-    private String IMAGE_PATH;
-    private TextView sample_url;
-    private ImageButton image_button;
+    private Uri currentUriImage;
+    private View newButtonLayout;
 
-    private View current_new_button_popup;
+    private boolean USER_CANCEL_EDITION = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,14 +65,12 @@ public class Editor extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Bundle extras = this.getIntent().getExtras();
 
         //get the extras from the intent and check if exist and has values to initialize the variable to create the editor view
         if(extras != null){
 
-            flagUriChanged = false;
             columnsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_COLUMNS_NAME, "3"));
             rowsNum = Integer.parseInt(extras.getString(OsmtrackerLayoutsDesigner.Preferences.EXTRA_ROWS_NAME, "4"));
 
@@ -87,7 +78,7 @@ public class Editor extends AppCompatActivity {
             if(layoutName.equals("") || layoutName.isEmpty()){
                 layoutName = getResources().getString(R.string.empty_layout_name).replace("{0}", Calendar.getInstance().getTime().toString());
             }
-            txtLayoutName = (TextView) findViewById(R.id.txt_layout_name);
+            TextView txtLayoutName = (TextView) findViewById(R.id.txt_layout_name);
             txtLayoutName.setText(layoutName);
 
             boolean notesCheckbox = extras.getBoolean(OsmtrackerLayoutsDesigner.Preferences.EXTRA_CHECKBOX_NOTES, false);
@@ -120,67 +111,14 @@ public class Editor extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), R.string.can_not_edit_button_message, Toast.LENGTH_SHORT).show();
                     }
                     else {
-                        showPopUp(currentGridItem);
+                        showNewButtonPopUp(currentGridItem);
                     }
-                    //Toast.makeText(getApplicationContext(), "You press " + position, Toast.LENGTH_SHORT).show();
 
                 }
             });
 
-            btnCancel = (Button) findViewById(R.id.btn_cancel);
-            btnCancel.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-                    builder.setTitle(R.string.cancelling_creation)
-                            .setMessage(R.string.cancel_verification)
-                            .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    onBackPressed();
-                                }
-                            })
-                            .setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    dialogInterface.cancel();
-                                }
-                            })
-                            .setCancelable(true)
-                            .create().show();
-                }
-            });
-            btnAccept = (Button) findViewById(R.id.btn_accept);
-            btnAccept.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //TODO: SAVE THE LAYOUT (ONLY IF THE PERMISSION TO WRITE IS GRANTED)
-                    if(isTotallyFilled()){
-                        try {
-
-                            XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName, rowsNum,columnsNum);
-
-
-                            AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-                            builder.setTitle(R.string.succesfully_created_title)
-                                    .setMessage(R.string.succesfully_created_message)
-                                    .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            onBackPressed();
-                                        }
-                                    })
-                                    .create().show();
-                        } catch (IOException e) {
-                            Toast.makeText(Editor.this,R.string.error_creating_message, Toast.LENGTH_LONG).show();
-                            e.printStackTrace();
-                        }
-                    }
-                    else{
-                        Toast.makeText(Editor.this,R.string.some_empty_buttons, Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
+            manageCancelEditionButton();
+            manageAcceptEditionBUtton();
 
         }
         else{
@@ -190,15 +128,51 @@ public class Editor extends AppCompatActivity {
         }
     }
 
-    private boolean isTotallyFilled(){
-        boolean result = true;
-        for (int i = 0; i < gridItemsArray.size(); i++) {
-            if(gridItemsArray.get(i).getItemName() == ""){
-                result = false;
-                break;
+    private void manageCancelEditionButton(){
+        Button btnCancel = (Button) findViewById(R.id.btn_cancel);
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                userCancelLayoutEdition();
             }
+        });
+    }
+
+    private void manageAcceptEditionBUtton(){
+        Button btnAccept = (Button) findViewById(R.id.btn_accept);
+        btnAccept.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isTotallyFilled()){
+                    try {
+                        XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName, rowsNum,columnsNum);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+                        builder.setTitle(R.string.succesfully_created_title)
+                                .setMessage(R.string.succesfully_created_message)
+                                .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        goHome();
+                                    }
+                                })
+                                .create().show();
+                    } catch (IOException e) {
+                        Toast.makeText(Editor.this,R.string.error_creating_message, Toast.LENGTH_LONG).show();
+                        e.printStackTrace();
+                    }
+                }
+                else{
+                    Toast.makeText(Editor.this,R.string.some_empty_buttons, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private boolean isTotallyFilled(){
+        for (LayoutButtonGridItem currentItem : gridItemsArray) {
+            if (currentItem.getItemName().equals("")) return false;
         }
-        return result;
+        return true;
     }
 
     @Override
@@ -234,7 +208,6 @@ public class Editor extends AppCompatActivity {
                                     }
                                 });
                         snackbar.show();
-                        //TODO: TURN OFF THE SAVE BUTTON IN THE EDTOR SCREEN
                     }
                 });
 
@@ -256,7 +229,6 @@ public class Editor extends AppCompatActivity {
                 if(grantResults.length == 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED){
                     Log.i(contextTag, "The permission to read was denied by the user");
                     Snackbar.make(findViewById(R.id.btn_accept), getResources().getString(R.string.permission_write_storage_denied), Snackbar.LENGTH_LONG).show();
-                    //TODO: TURN OFF THE SAVE BUTTON IN THE EDITOR SCREEN
                 }
                 else{
                     Log.i(contextTag, "The permission to read was granted");
@@ -282,76 +254,105 @@ public class Editor extends AppCompatActivity {
         return i;
     }
 
+    private void userCancelLayoutEdition(){
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+
+        builder.setTitle(R.string.cancelling_creation);
+        builder.setMessage(R.string.cancel_verification);
+        
+        builder.setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                goHome();
+            }});
+
+        builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }});
+
+        builder.setCancelable(true);
+        builder.create();
+        builder.show();
+
+    }
+
     @Override
     public void onBackPressed() {
-        //TODO: push a dialog notifying that this action delete the current layout without save it
-        startActivity(new Intent(this, MainActivity.class));
+        userCancelLayoutEdition(); // Warn the user that the layout will not be saved if press Back button.
+    }
+
+    private void goHome(){
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
         finish();
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        goHome();
         return true;
     }
 
-    private void showPopUp(final LayoutButtonGridItem currentGridItem){
+    private void showNewButtonPopUp(final LayoutButtonGridItem currentGridItem){
         LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
-        current_new_button_popup = inflater.inflate(R.layout.new_button_popup, null);
+        newButtonLayout = inflater.inflate(R.layout.new_button_popup, null);
 
-        final EditText buttonName = current_new_button_popup.findViewById(R.id.editTextButtonName);
-        final TextView imagePathTextView = current_new_button_popup.findViewById(R.id.url_text_view);
-
-        image_button = (ImageButton)current_new_button_popup.findViewById(R.id.imageButton);
-
+        final EditText buttonName = newButtonLayout.findViewById(R.id.editTextButtonName);
+        final TextView imagePathTextView = newButtonLayout.findViewById(R.id.url_text_view);
         final AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
-        builder.setTitle(R.string.new_button_pop_up_title)
-                .setView(current_new_button_popup)
-                .setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
 
-                        //Checking if the user changed the name or the image of the item
+        builder.setTitle(R.string.new_button_pop_up_title);
+        builder.setView(newButtonLayout);
+        builder.setPositiveButton(R.string.dialog_accept, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
 
-                        if( !currentGridItem.getItemName().equals(buttonName.getText().toString())) {
+                //Checking if the user changed the name or the image of the item
 
-                            Log.e("#", "Current name: "+ currentGridItem.getItemName() + " nombre en el edit text: "+ buttonName.getText().toString());
-                            currentGridItem.setItemName(buttonName.getText().toString());
-                            gridAdapter.notifyDataSetChanged();
-                            gvLayoutEditor.setAdapter(gridAdapter);
-                        }
-                        if(flagUriChanged){
-                            currentGridItem.setImageURI(currentUri);
-                            currentGridItem.setImagePath(imagePathTextView.getText().toString());
-                            gridAdapter.notifyDataSetChanged();
-                            gvLayoutEditor.setAdapter(gridAdapter);
-                            currentUri = null;
-                            flagUriChanged = false;
+                if(!currentGridItem.getItemName().equals(buttonName.getText().toString())) {
+                    currentGridItem.setItemName(buttonName.getText().toString());
+                    updateAndSetAdapter();
+                }
 
-                        }
-
-
-                    }
-                })
-                .setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();
-                    }
-                });
-
-        //Check if the current gridItem has name or image, and setting the popup with that name/image
-        if(currentGridItem.getItemName() != "" || currentGridItem.getImageURI() != null){
-            buttonName.setText(currentGridItem.getItemName());
-            imagePathTextView.setText(currentGridItem.getImagePath());
-            image_button.setMaxWidth(100);
-            image_button.setMaxHeight(100);
-            image_button.setPadding(9,9,9,9);
-            image_button.setImageURI(currentGridItem.getImageURI());
-        }
+                if(currentUriImage != null){
+                    currentGridItem.setImageURI(currentUriImage);
+                    currentGridItem.setImagePath(imagePathTextView.getText().toString());
+                    currentUriImage = null;
+                    updateAndSetAdapter();
+                }
+            }
+        });
+        builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
 
         final AlertDialog dialog = builder.create();
+        dialog.show();
 
+        setButtonPathAndName(currentGridItem, buttonName, imagePathTextView);
+
+        addTextListenerInAlert(buttonName, dialog);
+
+        checkIfButtonNameEmpty(buttonName, dialog);
+
+    }
+
+    private void updateAndSetAdapter(){
+        gridAdapter.notifyDataSetChanged();
+        gvLayoutEditor.setAdapter(gridAdapter);
+    }
+
+    private void checkIfButtonNameEmpty(EditText buttonName, AlertDialog dialog) {
+        if (buttonName.getText().toString().isEmpty()) dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        else dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+    }
+
+    private void addTextListenerInAlert(final EditText buttonName, final AlertDialog dialog) {
         buttonName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -363,67 +364,63 @@ public class Editor extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if (buttonName.getText().toString().isEmpty()) dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-                else dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                checkIfButtonNameEmpty(buttonName, dialog);
             }
         });
-        dialog.show();
-        if (buttonName.getText().toString().isEmpty()) dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-        else dialog.getButton(android.support.v7.app.AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+    }
 
-
+    // Check if the user has already changed the name or the icon when open it again
+    private void setButtonPathAndName(LayoutButtonGridItem currentGridItem, EditText name, TextView path) {
+        if(!currentGridItem.getItemName().equals(getString(R.string.EMPTY)) || currentGridItem.getImageURI() != null){
+            Uri selectedImage = currentGridItem.getImageURI();
+            name.setText(currentGridItem.getItemName());
+            path.setText(currentGridItem.getImagePath());
+            setIconInPopUp(selectedImage);
+        }
     }
 
     // This method throws the intent to open the gallery so the user can choose an icon for the new button in the layout
-    // Is called when the user presses the Icon in the pop up
     public void selectImage(View view){
-
-        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-        intent.setType("image/*");
-        startActivityForResult(intent, SELECT_IMAGE); // Start the activity waiting for a code as a response (SELECT_IMAGE)
+        Intent galleryIntent = new Intent();
+        Uri requestedData = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+        String intentAction = Intent.ACTION_PICK;
+        String dataType = "image/*";
+        galleryIntent.setDataAndType(requestedData,dataType);
+        galleryIntent.setAction(intentAction);
+        startActivityForResult(galleryIntent, OPEN_GALLERY_CODE); // Start the activity waiting for a code as a response (OPEN_GALLERY_CODE)
     }
 
     // This method is called when the intent to open the gallery is finished or closed
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
-
-        if (requestCode == SELECT_IMAGE){ // This is to indentIfy who returned the original requestCode
+        if (requestCode == OPEN_GALLERY_CODE){ // This is to indentIfy who returned the original requestCode
             if (resultCode == Activity.RESULT_OK) { // If no error happened in the process
-                if(current_new_button_popup != null) showPathAndIcon(data.getData());
+                setPathInPopUp(data.getData());
+                setIconInPopUp(data.getData());
             }
         }
     }
 
-    // This method writes the image path on the pop up window and shows the icon selected by the user
-    private void showPathAndIcon(Uri selectedImage){
-        currentUri = selectedImage;
-
-        flagUriChanged = true;
-
-        sample_url = (TextView)current_new_button_popup.findViewById(R.id.url_text_view);
-        image_button = (ImageButton)current_new_button_popup.findViewById(R.id.imageButton);
-
-        if (selectedImage != null && selectedImage.getPath() != null){
-
-            IMAGE_PATH = getPath(selectedImage);
-            sample_url.setText(IMAGE_PATH);
-            Log.e("Path", IMAGE_PATH);
-        }
-
-        // Set the correct properties so the image is shown in the right way
-        image_button.setMaxWidth(100);
-        image_button.setMaxHeight(100);
-        image_button.setPadding(9,9,9,9);
-        image_button.setImageURI(selectedImage);
+    private void setPathInPopUp(Uri selectedImage){
+        currentUriImage = selectedImage;
+        TextView imagePathView = (TextView) newButtonLayout.findViewById(R.id.url_text_view);
+        imagePathView.setText(getUriPath(selectedImage));
     }
 
-    // This method returns the path of an Uri object as a string
-    private String getPath(Uri uri) {
+    private void setIconInPopUp(Uri selectedImage){
+        ImageButton PopUpImageBUtton = (ImageButton) newButtonLayout.findViewById(R.id.imageButton);
+        PopUpImageBUtton.setMaxWidth(100);
+        PopUpImageBUtton.setMaxHeight(100);
+        PopUpImageBUtton.setPadding(9,9,9,9);
+        PopUpImageBUtton.setImageURI(selectedImage);
+
+    }
+
+    private String getUriPath(Uri uri) {
         String[] projection = { android.provider.MediaStore.Images.Media.DATA };
         Cursor cursor = managedQuery(uri, projection, null, null, null);
         int column_index = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
         return cursor.getString(column_index);
     }
-
 }
