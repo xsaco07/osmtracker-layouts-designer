@@ -143,7 +143,7 @@ public class Editor extends AppCompatActivity {
         btnAccept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isTotallyFilled()){
+                if(GridIsFull()){
                     try {
                         XMLGenerator.generateXML(Editor.this, gridItemsArray, layoutName, rowsNum,columnsNum);
                         AlertDialog.Builder builder = new AlertDialog.Builder(Editor.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
@@ -168,7 +168,7 @@ public class Editor extends AppCompatActivity {
         });
     }
 
-    private boolean isTotallyFilled(){
+    private boolean GridIsFull(){
         for (LayoutButtonGridItem currentItem : gridItemsArray) {
             if (currentItem.getItemName().equals("")) return false;
         }
